@@ -22,7 +22,7 @@
 #!/bin/bash
 set -e
 
-# This wrapper uses the GNU compilers to build 
+# This wrapper uses the GNU compilers to build
 # training and inference examples
 
 # Default Pytorch containers seem to have Pytorch installed through conda
@@ -33,31 +33,32 @@ echo "Trying to use Python libraries from $PY_SITE_PATH"
 CONFIG=Release
 OPENACC=0
 
+ROOT_PATH=$(dirname $(realpath ${0}))
 BUILD_PATH=$(pwd -P)/gnu/
-INSTALL_PATH=${1:-$BUILD_PATH/install/}
+INSTALL_PATH=${1:-${BUILD_PATH}/install/}
 mkdir -p $BUILD_PATH/build_proxy $BUILD_PATH/build_fortproxy $BUILD_PATH/build_example
-# c++ wrappers 
+# c++ wrappers
 (
-    cd $BUILD_PATH/build_proxy 
-    cmake -DOPENACC=$OPENACC -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH -DTORCH_CUDA_ARCH_LIST=$TORCH_CUDA_ARCH_LIST ../../src/proxy_lib
+    cd $BUILD_PATH/build_proxy
+    cmake -DOPENACC=$OPENACC -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH -DTORCH_CUDA_ARCH_LIST=$TORCH_CUDA_ARCH_LIST ${ROOT_PATH}/src/proxy_lib
     cmake --build . --parallel
     make install
 )
 
 # fortran bindings
 (
-    export PATH=$NVPATH:$PATH 
+    export PATH=$NVPATH:$PATH
     cd $BUILD_PATH/build_fortproxy
-    cmake -DOPENACC=$OPENACC -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_PREFIX_PATH=$INSTALL_PATH/lib ../../src/f90_bindings/
+    cmake -DOPENACC=$OPENACC -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_PREFIX_PATH=$INSTALL_PATH/lib ${ROOT_PATH}/src/f90_bindings/
     cmake --build . --parallel
     make install
 )
 
 # fortran examples
 (
-    export PATH=$NVPATH:$PATH 
+    export PATH=$NVPATH:$PATH
     cd $BUILD_PATH/build_example
-    cmake -DOPENACC=$OPENACC -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DCMAKE_Fortran_COMPILER=gfortran ../../examples/
+    cmake -DOPENACC=$OPENACC -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH -DCMAKE_Fortran_COMPILER=gfortran ${ROOT_PATH}/examples/
     cmake --build . --parallel
     make install
 )
